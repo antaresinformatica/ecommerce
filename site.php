@@ -52,9 +52,46 @@ $app->get("/products/:desurs", function($desurl){
 $app->get("/cart", function(){
 	$cart = Cart::getFromSession();
 	$page = new Page();
-	$page->setTpl("cart");
+	$page->setTpl("cart", [
+		'cart'=>$cart->getValues(),
+		'products'=>$cart->getProducts()
+	]);
 
+});
 
+// rota para quando clica no adicionar mais 1  produto
+$app->get("/cart/:idproduct/add", function($idproduct){
+	$product = new Product();
+	$product->get((int)$idproduct);
+	$cart = Cart::getFromSession();
+	$cart->addProduct($product);
+	// redireciona para o carrinho
+	header("Location: /cart");
+	exit;
+
+});
+
+// rota para quando clica no remover  produto
+$app->get("/cart/:idproduct/minus", function($idproduct){
+	$product = new Product();
+	$product->get((int)$idproduct);
+	$cart = Cart::getFromSession();
+	$cart->removeProduct($product); // para remover só um, nao precisa passar o parametro , pois por padrão é FALSE
+	// redireciona para o carrinho
+	header("Location: /cart");
+	exit;
+
+});
+
+// rota para quando clica remover todos os itens do produto
+$app->get("/cart/:idproduct/remove", function($idproduct){
+	$product = new Product();
+	$product->get((int)$idproduct);
+	$cart = Cart::getFromSession();
+	$cart->removeProduct($product, true); // o parametro true indica para a função que são todos os produtos
+	// redireciona para o carrinho
+	header("Location: /cart");
+	exit;
 
 });
 

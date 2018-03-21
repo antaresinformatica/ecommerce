@@ -85,11 +85,65 @@ class Cart extends Model {
 				':nrdays'      =>$this->getnrdays()
 			]);
 		$this->setData($results[0]);
+	}
+
+	public function addProduct(Product $product)
+	{
+		$sql = new Sql();
+		$sql->query("INSERT into tb_cartsproducts (idcart, idproduct) values (:idcart, :idproduct)", [
+			':idcart'=>$this->getidcart(),
+			':idproduct'=>$product->getidproduct()
+			]);
+	}
+	public function removeProduct(Product $product, $all = false)
+	{
+		// esta função pode remover um produto ou todos, isso porque
+		// na linha do produto tem a quantidade, de diminuir a quantidade diminui 1 produto
+		// porem se clicar no X que esta na linha do produto e tinha 3 unidades do produto , entao remove as tres unidades do produto
+		$sql = new Sql();
+		if ($all){
+			$sql->query("UPDATE tb_cartsproducts SET dtremoved = NOW() where idcart = :idcart and idproduct = :idproduct and dtremoved is null", [
+				':idcart'=>$this->getidcart(),
+				':idproduct'=>$product->getidproduct()
+
+				]);
+		} else {
+			// essa parte é executada quando clica no botao menos (menos 1 produto)
+			// por isso tem o LIMIT 1 (funcao do sql para executar so um registro)
+			$sql->query("UPDATE tb_cartsproducts SET dtremoved = NOW() where idcart = :idcart and idproduct = :idproduct and  tdremoved is null limit 1", [
+				':idcart'=>$this->getidcart(),
+				':idproduct'=>$product->getidproduct()
+
+				]);
 
 
+		}
 
+	}
 
+	public function getProducts()
+	{
+		$sql = new Sql();
+//		var_dump ( 
+//				SELECT b.idproduct, b.desproduct, b.vlprice, b.vlwidth, b.vllength, b.vlweight, b.desurl, count(*) as nrqtd , sum(b.vlprice) as vltotal
+//				from tb_cartsproducts a 
+//				INNER JOIN tb_products b on a.idproduct = b.idproduct
+//				where a.idcart = :idcart and a.dtremoved is null
+//				group by b.idproduct, b.desproduct, b.vlprice, b.vlwidth, b.vllength, b.vlweight, b.desurl
+//				order by b.desproduct
+//			);
+//			exit;
 
+		$rows = $sql->select("
+			SELECT b.idproduct, b.desproduct, b.vlprice, b.vlwidth, b.vllength, b.vlweight, b.desurl, count(*) as nrqtd , sum(b.vlprice) as vltotal
+			from tb_cartsproducts a 
+			INNER JOIN tb_products b on a.idproduct = b.idproduct
+			where a.idcart = :idcart and a.dtremoved is null
+			group by b.idproduct, b.desproduct, b.vlprice, b.vlwidth, b.vllength, b.vlweight, b.desurl
+			order by b.desproduct ",[
+				':idcart'=>$this->getidcart()
+			]);
+		return Product::checkList($rows);
 	}
 
 }
