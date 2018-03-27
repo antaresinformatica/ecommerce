@@ -9,6 +9,8 @@ use \Hcode\Model\User;
 class Cart extends Model {
 
 	const SESSION = "Cart";
+	const SESSION_ERROR = "CartError";
+
 	public static function getFromSession()
 	{
 		$cart = new Cart();
@@ -94,7 +96,9 @@ class Cart extends Model {
 			':idcart'=>$this->getidcart(),
 			':idproduct'=>$product->getidproduct()
 			]);
-	}
+
+		$this->getCalculateTotal();
+	}               
 	public function removeProduct(Product $product, $all = false)
 	{
 		// esta função pode remover um produto ou todos, isso porque
@@ -110,7 +114,7 @@ class Cart extends Model {
 		} else {
 			// essa parte é executada quando clica no botao menos (menos 1 produto)
 			// por isso tem o LIMIT 1 (funcao do sql para executar so um registro)
-			$sql->query("UPDATE tb_cartsproducts SET dtremoved = NOW() where idcart = :idcart and idproduct = :idproduct and  tdremoved is null limit 1", [
+			$sql->query("UPDATE tb_cartsproducts SET dtremoved = NOW() where idcart = :idcart and idproduct = :idproduct and  dtremoved is null limit 1", [
 				':idcart'=>$this->getidcart(),
 				':idproduct'=>$product->getidproduct()
 
@@ -118,6 +122,7 @@ class Cart extends Model {
 
 
 		}
+		$this->getCalculateTotal();
 
 	}
 
@@ -146,6 +151,134 @@ class Cart extends Model {
 		return Product::checkList($rows);
 	}
 
+	public function getProductsTotals()
+	{
+		$sql = new Sql();           
+		$results = $sql->select("
+			SELECT sum(vlprice) as vlprice, sum(vlwidth) as vlwidth, sum(vlheight) as vlheight, sum(vllength) as vllength, sum(vlweight) as vlweight, count(*) as nrqtd
+			from tb_products a
+			inner join tb_cartsproducts b on a.idproduct = b.idproduct
+			where b.idcart = :idcart and dtremoved is null;
+			", [
+				':idcart'=>$this->getidcart()
+			]);
+		if (count($results) > 0){
+			return $results[0];
+		} else {
+			return [];
+		}
+
+	}
+
+	                
+	public function setFreight($nrzipcode)
+	{
+		//retira o traco e deixa so numeros
+		$nrzipcode = str_replace('-', '', $nrzipcode);
+		$totals = $this->getProductsTotals();
+
+		if ($totals['nrqtd'] > 0 ) {
+//			var_dump($totals);
+			if ($totals['vlheight'] < 2) $totals['vlheight'] = 2; // tamanho minimo definido pelos correios
+			if ($totals['vllength'] < 16) $totals['vllength'] = 16; // comprimento nao pode ser inferior a  16 - definido pelos correios
+			$qs = http_build_query([
+				'nCdEmpresa'=>'',
+				'sDsSenha'=>'',
+				'nCdServico'=>'40010',
+				'sCepOrigem'=>'09853120',  
+				'sCepDestino'=> $nrzipcode, //'87301110'
+				'nVlPeso'=>$totals['vlweight'],
+				'nCdFormato'=>'1', // 1 é caixa ou pacote
+				'nVlComprimento'=>$totals['vllength'],
+				'nVlAltura'=>$totals['vlheight'],
+				'nVlLargura'=>$totals['vlwidth'],
+				'nVlDiametro'=>'0',
+				'sCdMaoPropria'=>'S',
+				'nVlValorDeclarado'=>$totals['vlprice'],
+				'sCdAvisoRecebimento'=>'S'
+
+
+
+			]);
+			$xml = simplexml_load_file("http://ws.correios.com.br/calculador/CalcPrecoPrazo.asmx/CalcPrecoPrazo?".$qs);
+//echo json_encode($xml);
+//exit;
+
+			$result = $xml->Servicos->cServico;
+//var_dump($xml);
+
+			if ($result->MsgErro != ''){
+				Cart::setMsgError($result->MsgErro);
+			} else {
+				Cart::clearMsgError();
+			}
+
+			$this->setnrdays($result->PrazoEntrega);
+			//$this->setvlfreight($result->Valor);
+			$this->setvlfreight(Cart::formatValueToDecimal($result->Valor));
+			$this->setdeszipcode($nrzipcode); 
+			$this->save();
+			return $result;
+		} else {
+			
+
+		}
+
+
+	}
+
+	public static function formatValueToDecimal($value):float
+	{
+		$value = str_replace('.', '', $value);
+		return str_replace(',', '.', $value);
+	}
+
+	public static function setMsgError($msg)
+	{
+		$_SESSION[Cart::SESSION_ERROR] = $msg;
+	}
+
+	public static function getMsgError()
+	{
+		$msg = (isset($_SESSION[Cart::SESSION_ERROR])) ? $_SESSION[Cart::SESSION_ERROR] : "";
+		Cart::clearMsgError();
+		return $msg;
+	}
+
+	public static function clearMsgError()
+	{
+
+		$_SESSION[Cart::SESSION_ERROR] = NULL;
+	}	
+
+	public function updateFreight()
+	{
+		// atualiza o valor do frete, para quando aumentar ou mininuir a quantidade
+		if ($this->getdeszipcode() != ''){
+			// se informou um cep
+			$this->setFreight($this->getdeszipcode());
+		}
+
+
+	}
+
+
+	public function getValues()
+	{
+		// sobreescrevendo o metodo getValues
+		$this->getCalculateTotal();
+		return parent::getValues();
+
+	}
+	public function getCalculateTotal()
+	{
+		$this->updateFreight(); // atualiza o valor do frete
+
+		$totals = $this->getProductsTotals();
+		$this->setvlsubtotal($totals['vlprice']);
+		$this->setvltotal($totals['vlprice'] + $this->getvlfreight());
+
+	}
 }
 
 ?>
