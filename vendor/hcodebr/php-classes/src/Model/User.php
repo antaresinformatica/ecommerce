@@ -9,6 +9,9 @@ use \Hcode\Mailer;
 class User extends Model {
 	const SESSION = "User";
 	const SECRET = "HcodePhp7_Secret"; // tem que ter 16 caracteres
+	const ERROR = "UserError";
+	const ERROR_REGISTER = "UserErrorRegister";
+
 	public static function getFromSession()
 	{
 		$user = new User();
@@ -19,7 +22,7 @@ class User extends Model {
 
 	}
 
-	public function checkLogin()
+	public function checkLogin($inadmin = true)
 	{
 		if (
 				!isset($_SESSION[User::SESSION])
@@ -68,7 +71,10 @@ class User extends Model {
 		{
 			header("Location: /admin/login");
 			exit;
-		} 
+		} else {
+			header("Location: /login");
+			exit;			
+		}
 	}
 	public static function logout()
 	{
@@ -222,6 +228,26 @@ class User extends Model {
 		$sql->query("UPDATE tb_users set despassword = :password where iduser= :iduser", array(":password"=>$password, ":iduser"=>$this->getiduser()));
 	}
 
+
+
+	public static function setError($msg)
+	{
+		$_SESSION[User::SESSION_ERROR] = $msg;
+	}
+	public static function getError()
+	{
+		$msg = (isset($_SESSION[User::ERROR])) ? $_SESSION[User::ERROR] : "";
+		User::clearError();
+		return $msg;
+	}
+	public static function clearError()
+	{
+		$_SESSION[User::ERROR] = NULL;
+	}	
+	public static function setErrorRegister($msg)
+	{
+		$_SESSION[User::ERROR_REGISTER] = $msg;
+	}
 }
 
 ?>
