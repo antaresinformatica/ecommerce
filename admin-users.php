@@ -63,27 +63,41 @@ $app->get('/admin/users/:iduser', function($iduser){
 //	$page->setTpl("users-update");
 //});
 
+
+
+
 // post
-$app->post("/admin/users/create", function(){
-	User::verifyLogin();
-	//var_dump($_POST);	
-	$user = new User();
-	// abaixo verifica se o campo inadimin (checkbox)
-	// isset verifica se foi definido valor, entao o valor é 1, senao é 0
+//$app->post("/admin/users/create", function(){
+//	User::verifyLogin();
+//	//var_dump($_POST);	
+//	$user = new User();
+//	// abaixo verifica se o campo inadimin (checkbox)
+//	// isset verifica se foi definido valor, entao o valor é 1, senao é 0
+//
+// //   $_POST["inadmin"] = (isset($_POST["inadmin"])) ? 1 : 0;
+// //   $_POST['despassword'] = password_hash($_POST["despassword"], PASSWORD_DEFAULT, ["cost"=>12]);
+//  	$_POST['inadmin'] = (isset($_POST["inadmin"])) ? 1 : 0;
+// 	$_POST['despassword'] = password_hash($_POST["despassword"], PASSWORD_DEFAULT, ["cost"=>12]);
 
- //   $_POST["inadmin"] = (isset($_POST["inadmin"])) ? 1 : 0;
- //   $_POST['despassword'] = password_hash($_POST["despassword"], PASSWORD_DEFAULT, ["cost"=>12]);
-  	$_POST['inadmin'] = (isset($_POST["inadmin"])) ? 1 : 0;
- 	$_POST['despassword'] = password_hash($_POST["despassword"], PASSWORD_DEFAULT, ["cost"=>12]);
+//	$user->setData($_POST);
+//	// vai executar o save, que é uma funcao que esta em user.php que por sua vez vai executar uma procedure que salva dados em 2 tabelas
+//	$user->save();
+//	//var_dump($user);	
+//	header("Location: /admin/users");
+//	exit;
+//});
 
-	$user->setData($_POST);
-	// vai executar o save, que é uma funcao que esta em user.php que por sua vez vai executar uma procedure que salva dados em 2 tabelas
-	$user->save();
-	//var_dump($user);	
-	header("Location: /admin/users");
-	exit;
+// antes estava como acima, mudei e deixei o codigo abaixo
+
+$app->post("/admin/users/create", function () {
+    User::verifyLogin();
+    $user = new User();
+    $_POST["inadmin"] = (isset($_POST["inadmin"])) ? 1 : 0;
+    $user->setData($_POST);
+    $user->save();
+    header("Location: /admin/users");
+    exit;
 });
-
 
 
 
