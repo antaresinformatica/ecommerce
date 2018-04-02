@@ -136,7 +136,9 @@ $app->get("/login", function(){
 //	$page->setTpl("login");
 
 	$page->setTpl("login", [
-		'error'=>User::getError()
+		'error'=>User::getError(),
+		'errorRegister'=>User::getErrorRegister(),
+		'registerValues'=>(isset($_SESSION['registerValues'])) ? $_SESSION['registerValues'] : ['name'=>'', 'email'=>'', 'phone'=>'']
 	]);
 
 });
@@ -162,5 +164,57 @@ $app->get("/logout", function(){
 	header("Location: /login");
 	exit;
 });
+
+$app->post("/register", function(){
+	// registra os dados que foram digitados, pois se houver algum campo errado, o usuario nao precisara digitar tudo novamente
+	$_SESSION['registerValues'] = $_POST;
+
+	// antes de gravar vamos fazer algumas validações
+	if (!isset($_POST['name']) || $_POST['name']== ''){
+		// verifica se o POST foi criado e enviado para este formulario
+		// verifica se o POST nao esta em branco
+		User::setErrorRegister("Preencha o seu nome.");
+		header('Location: /login');
+		exit;
+	}
+	if (!isset($_POST['email']) || $_POST['email']== ''){
+		// verifica se o POST foi criado e enviado para este formulario
+		// verifica se o POST nao esta em branco
+		User::setErrorRegister("Preencha o seu email.");
+		header('Location: /login');
+		exit;
+	}	
+	if (!isset($_POST['password']) || $_POST['password']== ''){
+		// verifica se o POST foi criado e enviado para este formulario
+		// verifica se o POST nao esta em branco
+		User::setErrorRegister("Preencha a senha.");
+		header('Location: /login');
+		exit;
+	}
+	// verifica se tem 2 usuarios com mesmo email
+	if (User::checkLoginExist($_POST['email']) === true){
+		User::setErrorRegister("Este endereço de email já esta sendo usado por outro usuário.");
+		header('Location: /login');
+		exit;		
+	}
+
+	$user = new User();
+	$user->setData([
+		'inadmin'=>0,
+		'deslogin'=>$_POST['email'],
+		'desperson'=>$_POST['name'],
+		'desemail'=>$_POST['email'],
+		'despassword'=>$_POST['password'],
+		'nrphone'=>$_POST['phone']
+
+		]);
+
+	$user->save();
+	user::login($_POST['email'], $_POST['password']);
+	header('Location: /checkout');
+	exit;
+
+});
+
 
  ?>
