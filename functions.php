@@ -1,10 +1,9 @@
 <?php 
 use \Hcode\Model\User;
 
-	function formatPrice(float $vlprice){
+	function formatPrice($vlprice){
 		
-		// esta funcao obrigatoriamente recebe um parametro do tipo foat
-		// e retorna o numero formatado para o padrao brasileiro
+		if (!$vlprice > 0) $vlprice = 0; // se veio valor nulo , atribui valor = 0
 		return number_format($vlprice, 2 , ",", ".");
 	}
 	function checkLogin($inadmin = true)

@@ -170,7 +170,7 @@ class User extends Model {
 
 
 	}
-	public static function getForgot($email){
+	public static function getForgot($email, $inadmin = true){
 		$sql = new Sql();
 		$results = $sql->select ("
 			SELECT * from tb_persons a
@@ -195,7 +195,12 @@ class User extends Model {
 				$dataRecovery = $results2[0];
 				// secret é uma constante que tem uma cadeia de 16 caracteres usado para encriptografar
 				$code = base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_128, User::SECRET, $dataRecovery["idrecovery"], MCRYPT_MODE_ECB));
-				$link = "http://www.hcodecommerce.com.br/admin/forgot/reset?code=$code";
+				if ($inadmin === true){
+					$link = "http://www.hcodecommerce.com.br/admin/forgot/reset?code=$code";
+				}	else {
+					// se quem esta chamado esta rotina é uma senha de usuario (nao adminitrador)
+					$link = "http://www.hcodecommerce.com.br/forgot/reset?code=$code";
+				}
 
 				$mailer = new Mailer($data["desemail"], $data["desperson"], "redefinir senha do usuario","forgot",array(
 					"name"=>$data["desperson"],
