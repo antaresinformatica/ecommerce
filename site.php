@@ -220,20 +220,6 @@ $app->post("/register", function(){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 $app->get("/forgot", function(){
 	$page = new Page();
 	$page->setTpl("forgot");
@@ -285,6 +271,66 @@ $app->post("/forgot/reset", function(){
 
 	$page->setTpl("forgot-reset-success");
 
+
+});
+
+
+$app->get("/profile", function(){
+
+	User::verifyLogin(false); 
+	$user = User::getFromSession();
+	$page = new Page();
+	$page->setTpl("profile", [
+		'user'=>$user->getValues(),
+		'profileMsg'=>User::getSuccess(),
+		'profileError'=>User::getError()
+
+		]);
+});
+
+
+// salva alguma alteracao de usuario
+$app->post("/profile", function(){
+	User::verifyLogin(false);
+	// se nao existe desperson ou nao foi definido
+	if (!isset($_POST['desperson']) || $_POST['desperson'] ==='') {
+		User::setError("Preencha o seu nome.");
+		header('Location: /profile');
+		exit;
+	}
+	if (!isset($_POST['desemail']) || $_POST['desemail'] ==='') {
+		User::setError("Preencha o seu email.");
+		header('Location: /profile');
+		exit;
+	}	
+
+
+
+	$user = User::getFromSession();
+	// se o usuario alterou o email
+	if ($_POST['desemail'] !== $user->getdesemail()){
+		// alterou e email, vamos ver se o email ja esta cadastrado para outro usuario
+		if (User::checkLoginExist($_POST['desemail']) === true){
+			User::setError("Este endereço de e-mail ja está cadastrado.");
+			header('Location: /profile');
+			exit;
+
+		}
+
+	}
+	// sobrescreve o inadmin e despassword por seguranca
+	$_POST['inadmin'] = $user->getinadmin();
+	$_POST['despassword'] = $user->getdespassword();
+	// vamos definir o login como o proprio email informado
+	$_POST['deslogin'] = $_POST['desemail'];
+
+	$user->setData($_POST);
+$user->update(false);
+$_SESSION[User::SESSION] = $user->getValues();
+	//$user->save();
+	User::setSuccess('Dados alterados com sucesso!');
+	header('Location: /profile');
+	exit;
 
 });
 
