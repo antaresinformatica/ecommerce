@@ -6,7 +6,8 @@ use \Hcode\Model\Category;
 use \Hcode\Model\Cart;
 use \Hcode\Model\Address;
 use \Hcode\Model\User;
-
+use \Hcode\Model\Order;
+use \Hcode\Model\OrderStatus;
 $app->get('/', function() {	
 	$products = Product::listAll();
 	$page = new Page();
@@ -199,8 +200,35 @@ $app->post("/checkout", function(){
 	$_POST['deszipcode'] = $_POST['zipcode'];
 	$_POST['idperson'] = $user->getidperson();
 	$address->setData($_POST);
+//	echo "<br>";
+//	echo "antes de salvar o endereco, variavel post = ";
+//	var_dump($address);
+//	echo "<br>";
 	$address->save();
-	header('Location: /order');
+
+	$cart = Cart::getFromSession();
+	$totals = $cart->getCalculateTotal();
+	$order = new Order();
+	$order->setData([
+		'idcart'=>$cart->getidcart(),
+		'idaddress'=>$address->getidaddress(),
+		'iduser'=>$user->getiduser(),
+		'idstatus'=>OrderStatus::EM_ABERTO,
+		'vltotal'=>$totals['vlprice'] + $cart->getvlfreight()
+
+		]);
+	$order->save();
+//echo "apos salvar";
+//echo "<br>";
+//echo $order->getidorder();
+//var_dump($order);
+//exit;
+
+
+
+
+
+	header("Location: /order/".$order->getidorder());
 	exit;
 
 
@@ -410,6 +438,15 @@ $_SESSION[User::SESSION] = $user->getValues();
 	header('Location: /profile');
 	exit;
 
+});
+$app->get("/order/:idorder", function($idorder){
+	User::verifyLogin(false);
+	$order->get((int)$idorder);
+	$page = new Page();
+	$page->setTpl("payment",[
+		'order'=>$order->getValues()
+		]);
+	
 });
 
 

@@ -57,23 +57,42 @@ class Address extends Model {
 
 
 		$results = $sql->select("CALL sp_addresses_save(:idaddress, :idperson, :desaddress, :desnumber, :descomplement, :descity, :desstate, :descountry, :deszipcode, :desdistrict)", [
-     ':idaddress'=> $this->getidaddress(),
-     ':idperson'=> $this->getidperson(),
-     ':desaddress'=>utf8_decode($this->getdesaddress()),
-     ':desnumber'=>utf8_decode( $this->getdesnumber()),
-     ':descomplement'=>utf8_decode( $this->getdescomplement()),
-     ':descity'=>utf8_decode( $this->getdescity()),
-     ':desstate'=>utf8_decode( $this->getdesstate()),
-     ':descountry'=>utf8_decode( $this->getdescountry()),
-     ':deszipcode'=> $this->getdeszipcode(),
-     ':desdistrict'=> $this->getdesdistrict()
- ]);
-		//var_dump($results);
-		//exit;
+		     ':idaddress'=> $this->getidaddress(),
+		     ':idperson'=> $this->getidperson(),
+		     ':desaddress'=>utf8_decode($this->getdesaddress()),
+		     ':desnumber'=>utf8_decode( $this->getdesnumber()),
+		     ':descomplement'=>utf8_decode( $this->getdescomplement()),
+		     ':descity'=>utf8_decode( $this->getdescity()),
+		     ':desstate'=>utf8_decode( $this->getdesstate()),
+		     ':descountry'=>utf8_decode( $this->getdescountry()),
+		     ':deszipcode'=> $this->getdeszipcode(),
+		     ':desdistrict'=> $this->getdesdistrict()
+ 			]);
+//		echo "aqui     <br";
+//		echo "teste";
+//		echo "cod.endereco:" . $this->getidperson();
+//		echo "<br>";
+
+
+//		var_dump($results);
+//		exit;
+
+
+echo "quantidade=";
+echo "<br>";
+echo count($results);
+echo "<br>";
 
 
 		if (count($results) > 0 ){
+//			echo "<br>";
+//			echo " dentro do if";
+//			echo "<br>";
 			$this->setData($results[0]);
+//			echo "<br>";
+//			echo $this->setData($results[0]);
+//		var_dump($results);
+//		exit;
 		}
 
 	}
