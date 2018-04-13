@@ -78,10 +78,7 @@ class Address extends Model {
 //		exit;
 
 
-echo "quantidade=";
-echo "<br>";
-echo count($results);
-echo "<br>";
+
 
 
 		if (count($results) > 0 ){
