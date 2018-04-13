@@ -53,18 +53,26 @@ class Order extends Model {
 	public function get($idorder)
 	{
 		$sql = new Sql();
-		$results = $sql->select ("
+		$results = $sql->select("
 			SELECT * from tb_orders a 
 			inner join tb_ordersstatus b using(idstatus)
 			inner join tb_carts c using(idcart)
 			inner join tb_users d on d.iduser = a.iduser
 			inner join tb_addresses e using(idaddress)
-			inner join tb_person f on f.idperson = d.idperson
+			inner join tb_persons f on f.idperson = d.idperson
 			where a.idorder = :idorder
 			", [
 				':idorder'=>$idorder
 			]);
-		if (count($results)[0]){
+//echo "<br>";		
+//var_dump($results);
+
+//echo "<br>";
+//echo "<em order.php";
+//echo "<br>";
+//echo $idorder;
+//echo "<br>";
+		if (count($results) > 0){
 			$this->setData($results[0]);
 		}
 
