@@ -7,6 +7,12 @@ use \Hcode\Model\Cart;
 		if (!$vlprice > 0) $vlprice = 0; // se veio valor nulo , atribui valor = 0
 		return number_format($vlprice, 2 , ",", ".");
 	}
+
+	function formatDate($date)
+	{
+		return date('d/m/Y', strtotime($date));
+
+	}
 	function checkLogin($inadmin = true)
 	{
 		return User::checkLogin($inadmin);
