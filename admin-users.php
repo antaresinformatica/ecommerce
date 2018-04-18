@@ -8,20 +8,40 @@ use \Hcode\Model\User;
 
 $app->get("/admin/users", function(){
 	User::verifyLogin();
-	$users = User::listAll();  // funcao que lista os usuarios (public static function listAll(){)
-	
-		//foreach ($users as $key => $value) {
-		//	echo $key ." este ". "<br>";
-		//}
+	$search = (isset($_GET['search'])) ? $_GET['search'] : "";
+	$page = (isset($_GET['page'])) ? (int)$_GET['page'] : 1;
 
 
+	if ($search != '')
+	{
+		$pagination = User::getPageSearch($search, $page);
+	} else {
+		$pagination = User::getPage($page);  
+	}
 
-	$page = new PageAdmin([
-		"header"=>true, // esta logado, entao quero o header e footer
-		"footer"=>true
+	$pages = [];
+	for ($x = 0; $x < $pagination['pages']; $x++)
+	{
+		array_push($pages, [
+			'href'=>'/admin/users?'.http_build_query([
+				'page'=>$x+1,
+				'search'=>$search
+			]),
+			'text'=>$x+1
+
 		]);
 
-	$page->setTpl("users", array("users"=>$users)); // é o users.html
+	}
+
+	$page = new PageAdmin();
+
+	$page->setTpl("users", array(
+		"users"=>$pagination['data'], 
+		"search"=>$search,
+		"pages"=>$pages
+		));
+
+	//$page->setTpl("users", array("users"=>$users)); // é o users.html
 
 });
 
