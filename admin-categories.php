@@ -9,7 +9,7 @@ use \Hcode\Model\Product;
 $app->get("/admin/categories", function(){
 	User::verifyLogin(); // verifica se usuario esta logado (se nao esta acessando direto a url)
 
-$search = (isset($_GET['search'])) ? $_GET['search'] : "";
+	$search = (isset($_GET['search'])) ? $_GET['search'] : "";
 	$page = (isset($_GET['page'])) ? (int)$_GET['page'] : 1;
 
 
@@ -33,9 +33,6 @@ $search = (isset($_GET['search'])) ? $_GET['search'] : "";
 		]);
 
 	}
-
-
-
 
 
 	$page = new PageAdmin();
